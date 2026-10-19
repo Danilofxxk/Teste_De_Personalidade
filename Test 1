@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multiple choice example</title>
+  <style>
+    body { font: 1.0625rem/1.6 system-ui, sans-serif; background: #eef2f7; color: #14213d; margin: 0; }
+    .quiz { max-width: 32rem; margin: 3rem auto; padding: 0 1.25rem; }
+    fieldset { border: 1px solid #d3dbe6; border-radius: 8px; background: #fff; padding: 1rem 1.25rem; }
+    legend { font-weight: 700; padding: 0 .4rem; }
+    label { display: block; padding: .4rem 0; cursor: pointer; }
+    button { font: inherit; margin-top: 1rem; padding: .5rem 1rem; cursor: pointer; }
+    #result { margin-top: 1rem; font-weight: 600; }
+    .right { color: #1a7f3c; }
+    .wrong { color: #b3261e; }
+  </style>
+</head>
+<body>
+  <div class="quiz">
+    <!-- 1. The question and its options -->
+    <fieldset>
+      <legend>Which language adds behavior to a web page?</legend>
+      <!-- All radio buttons share name="answer", so only one can be picked -->
+      <label><input type="radio" name="answer" value="html"> HTML</label>
+      <label><input type="radio" name="answer" value="css"> CSS</label>
+      <label><input type="radio" name="answer" value="js"> JavaScript</label>
+      <label><input type="radio" name="answer" value="txt"> Plain text</label>
+    </fieldset>
+ 
+    <button id="check" type="button">Check answer</button>
+    <p id="result" aria-live="polite"></p>
+  </div>
+ 
+  <script>
+    // 2. The correct answer is the value of one option
+    const correct = "js";
+ 
+    document.getElementById("check").addEventListener("click", () => {
+      const result = document.getElementById("result");
+      // Find the option the visitor selected (null if none)
+      const chosen = document.querySelector('input[name="answer"]:checked');
+ 
+      if (!chosen) {
+        result.textContent = "Pick an answer first.";
+        result.className = "";
+      } else if (chosen.value === correct) {
+        result.textContent = "Correct!";
+        result.className = "right";
+      } else {
+        result.textContent = "Not quite. Try again.";
+        result.className = "wrong";
+      }
+    });
+  </script>
+</body>
+</html>
