@@ -1,2 +1,254 @@
-<H1> Hello world</H1>
-<h2>Live testing</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Personality Quiz</title>
+  <style>
+    /* Colors are variables; dark mode only swaps these values */
+    :root {
+      --bg: #f4f3fb; --card: #ffffff; --ink: #1b1740; --muted: #675f8c;
+      --line: #dcd8f0; --accent: #6c47ff; --accent2: #ff6b9a; --field: #faf9ff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0e0c1f; --card: #1a1735; --ink: #efeeff; --muted: #a49fcb;
+        --line: #302b5a; --accent: #8f74ff; --accent2: #ff7fa8; --field: #141230;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0e0c1f; --card: #1a1735; --ink: #efeeff; --muted: #a49fcb;
+      --line: #302b5a; --accent: #8f74ff; --accent2: #ff7fa8; --field: #141230;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--ink);
+      font: 1rem/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: radial-gradient(60rem 30rem at 85% -10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent), var(--bg);
+    }
+    .app { max-width: 34rem; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+    .brand { font-weight: 800; letter-spacing: -.02em; font-size: 1.15rem; }
+    .brand b { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    button { font: inherit; cursor: pointer; }
+    .ghost { color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: .4rem .9rem; }
+    .primary { color: #fff; border: 0; border-radius: 12px; padding: .8rem 1.4rem; font-weight: 700; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+    :is(button, input, a):focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+    .progress { height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; margin-bottom: 1.25rem; }
+    #bar { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .35s; }
+
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 1.75rem; box-shadow: 0 18px 50px -25px rgba(60, 30, 160, .45); }
+    h1 { font-size: clamp(1.7rem, 6vw, 2.2rem); line-height: 1.15; letter-spacing: -.03em; margin: 0 0 .5rem; }
+    h2 { font-size: 1.2rem; line-height: 1.3; letter-spacing: -.02em; margin: 0 0 .9rem; }
+    .muted { color: var(--muted); }
+    .step { color: var(--accent); font-weight: 700; font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; margin: 0; }
+
+    /* Fields */
+    .grid { display: grid; grid-template-columns: 1fr 7rem; gap: .9rem; margin: 1.25rem 0 .9rem; }
+    .grid .full { grid-column: 1 / -1; }
+    @media (max-width: 30rem) { .grid { grid-template-columns: 1fr; } }
+    .field span { display: block; font-weight: 600; font-size: .9rem; margin-bottom: .3rem; }
+    input[type="text"], input[type="email"], input[type="number"] {
+      width: 100%; font: inherit; color: var(--ink); background: var(--field);
+      border: 1px solid var(--line); border-radius: 10px; padding: .65rem .8rem;
+    }
+
+    input:user-invalid { border-color: #e5484d; }
+
+    /* Agreement: tiny text whose color is mixed into the card background, so it is faint */
+    .consent { display: flex; gap: .6rem; align-items: flex-start; margin-bottom: 1.75rem; }
+    .consent input { margin-top: .15rem; accent-color: var(--accent); width: 1.05rem; height: 1.05rem; flex: none; }
+    .consent small { font-size: .68rem; line-height: 1.4; color: color-mix(in srgb, var(--muted) 50%, var(--card)); }
+
+    /* Questions and answer cards (the real radio is hidden, the label is the card) */
+    .q { margin-bottom: 1.75rem; }
+    .options { display: grid; gap: .6rem; }
+    .option { display: block; position: relative; cursor: pointer; border: 1px solid var(--line); border-radius: 14px; padding: .8rem 1rem; background: var(--field); transition: border-color .15s, transform .15s; }
+    .option:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .option input { position: absolute; opacity: 0; }
+    .option:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--field)); box-shadow: inset 0 0 0 1px var(--accent); }
+    .option:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+    #hint { color: #e5484d; font-weight: 600; min-height: 1.5em; margin: 0 0 .75rem; }
+
+    /* Result */
+    .badge { display: grid; place-items: center; width: 4rem; height: 4rem; border-radius: 18px; color: #fff; font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); margin-bottom: 1rem; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">Who <b>are you</b>?</div>
+      <button id="theme" class="ghost" type="button">Dark mode</button>
+    </header>
+
+    <!-- Progress bar: fills up as questions are answered -->
+    <div class="progress" aria-hidden="true"><div id="bar"></div></div>
+
+    <main class="card">
+
+      <!-- One single form: details, agreement, questions and button on the same page.
+           The browser checks the required, minlength, type and min rules before the script runs. -->
+      <form id="quiz">
+        <h1>Find your personality type</h1>
+        <p class="muted">Fill in the details, answer three questions and see your result.</p>
+
+        <!-- required = must be filled in. minlength = at least 2 characters.
+             type="email" checks the email format. min="13" = minimum age. -->
+        <div class="grid">
+          <label class="field full"><span>Name</span>
+            <input type="text" id="name" required minlength="2" autocomplete="off" placeholder="Your name"></label>
+          <label class="field"><span>Email</span>
+            <input type="email" id="email" required autocomplete="off" placeholder="you@example.com"></label>
+          <label class="field"><span>Age</span>
+            <input type="number" id="age" required min="13" max="120" inputmode="numeric" autocomplete="off" placeholder="25"></label>
+        </div>
+
+        <label class="consent">
+          <input type="checkbox" id="agree">
+          <small>
+            I agree to the User Agreement. By ticking this box I confirm that I am at least 13 years old and that the
+            details above are mine. They are used only to personalize this quiz and show my result on this page.
+            They are not sold or shared with third parties, and this page does not send them to a server or keep
+            them after I close it. Taking part is voluntary and I may stop at any time. The result is for
+            entertainment only and is not psychological, medical or professional advice. The owner of this site may
+            update these terms at any time.
+          </small>
+        </label>
+
+        <!-- The 3 questions are drawn here by JavaScript -->
+        <div id="questions"></div>
+
+        <p id="hint" role="alert"></p>
+        <button class="primary" type="submit">See my result</button>
+      </form>
+
+      <!-- Result: hidden until the form is submitted -->
+      <section id="result" hidden>
+        <div class="badge" id="badge" aria-hidden="true"></div>
+        <p class="step" id="who"></p>
+        <h2 id="title"></h2>
+        <p id="text"></p>
+        <button class="primary" id="again" type="button">Take it again</button>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ---- DATA --------------------------------------------------------------
+    // Each answer is [text, type]. E = Explorer, B = Builder, C = Connector.
+    const questions = [
+      { q: "Your Saturday plans just got cancelled. What do you do?", o: [
+        ["Pick a place I’ve never been to and go", "E"],
+        ["Start a project I’ve been putting off", "B"],
+        ["Call friends and organize something last-minute", "C"],
+        ["Try a new recipe or a new hobby", "E"],
+        ["Tidy up and plan the week ahead", "B"] ] },
+      { q: "In a group project, you are the one who…", o: [
+        ["Brings the wild ideas", "E"],
+        ["Makes the plan and tracks the details", "B"],
+        ["Keeps everyone motivated and talking", "C"],
+        ["Jumps in wherever help is needed", "C"],
+        ["Quietly does their own part really well", "B"] ] },
+      { q: "What matters most to you?", o: [
+        ["Freedom to explore", "E"],
+        ["Doing things well", "B"],
+        ["Close relationships", "C"],
+        ["Learning something new every day", "E"],
+        ["Stability and security", "B"] ] }
+    ];
+
+    const results = {
+      E: { badge: "E", title: "The Explorer", text: "You are curious and restless in the best way. New places, ideas and experiences give you energy, and you learn by doing. Your challenge is to finish what you start before the next adventure calls." },
+      B: { badge: "B", title: "The Builder", text: "You are reliable, focused and practical. You like clear plans and you take pride in quality work, so people trust you with the important jobs. Your challenge is to leave room for surprises." },
+      C: { badge: "C", title: "The Connector", text: "You are warm, social and encouraging. You notice how people feel and you bring them together, which makes any group better. Your challenge is to make time for your own needs too." }
+    };
+
+    const $ = (id) => document.getElementById(id);   // short helper to find elements
+    const form = $("quiz");
+
+    // ---- DRAW THE QUESTIONS ---------------------------------------------------
+    // Each question gets its own radio group (name="q0", "q1", "q2"), so one answer per question
+    $("questions").innerHTML = questions.map((item, i) =>
+      `<div class="q" role="radiogroup" aria-labelledby="ql${i}">
+         <p class="step">Question ${i + 1} of ${questions.length}</p>
+         <h2 id="ql${i}">${item.q}</h2>
+         <div class="options">` +
+      item.o.map((opt) => `<label class="option"><input type="radio" name="q${i}" value="${opt[1]}"> ${opt[0]}</label>`).join("") +
+      `</div></div>`).join("");
+
+    // ---- PROGRESS BAR ----------------------------------------------------------
+    function answeredCount() {
+      return questions.filter((_, i) => form.querySelector(`input[name="q${i}"]:checked`)).length;
+    }
+    form.addEventListener("change", () => {
+      $("bar").style.width = (answeredCount() / questions.length) * 100 + "%";
+      $("hint").textContent = "";
+    });
+
+    // ---- THEME BUTTON -----------------------------------------------------------
+    const root = document.documentElement;
+    function applyTheme(t) {
+      root.setAttribute("data-theme", t);
+      $("theme").textContent = t === "dark" ? "Light mode" : "Dark mode";
+    }
+    let saved = null;
+    try { saved = localStorage.getItem("theme"); } catch (e) {}
+    applyTheme(saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+    $("theme").addEventListener("click", () => {
+      const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      applyTheme(next);
+      try { localStorage.setItem("theme", next); } catch (e) {}   // only the theme is saved
+    });
+
+    // ---- SUBMIT: check answers and show the result -------------------------------
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();                        // stay on the page (no reload)
+
+      // The browser already checked email and age. A name of only spaces still passes minlength, so check it here.
+      if ($("name").value.trim().length < 2) { $("hint").textContent = "Please enter a name with at least 2 characters."; $("name").focus(); return; }
+      // Every question and the agreement box are also needed
+      if (answeredCount() < questions.length) { $("hint").textContent = "Please answer all three questions."; return; }
+      if (!$("agree").checked) { $("hint").textContent = "Please tick the agreement box."; return; }
+
+      // Collect the chosen type for each question and count them
+      const count = { E: 0, B: 0, C: 0 };
+      let lastType = "";
+      questions.forEach((_, i) => {
+        lastType = form.querySelector(`input[name="q${i}"]:checked`).value;
+        count[lastType]++;
+      });
+      const max = Math.max(...Object.values(count));
+      const winners = Object.keys(count).filter((t) => count[t] === max);
+      // If there is a tie, the answer to the last question decides
+      const type = winners.includes(lastType) ? lastType : winners[0];
+      const r = results[type];
+
+      // textContent (not innerHTML) so anything typed in the name box stays plain text
+      const name = $("name").value.trim();
+      $("badge").textContent = r.badge;
+      $("who").textContent = name ? name + ", you are" : "You are";
+      $("title").textContent = r.title;
+      $("text").textContent = r.text;
+
+      form.hidden = true;
+      $("result").hidden = false;
+      $("bar").style.width = "100%";
+    });
+
+    // ---- RESTART -------------------------------------------------------------------
+    $("again").addEventListener("click", () => {
+      form.reset();                              // clears fields, checkbox and answers
+      $("result").hidden = true;
+      form.hidden = false;
+      $("bar").style.width = "0";
+      window.scrollTo({ top: 0 });
+    });
+  </script>
+</body>
+</html>
